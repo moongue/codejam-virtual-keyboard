@@ -14,6 +14,9 @@
   width: 100%;
   background: #f3f3f3;;
 }
+.keys:not(.special-key) {
+  background: #000;
+}
 .key {
   display: flex;
   justify-content: center;
@@ -25,13 +28,20 @@
   border-radius: 8px;
   font-size: 18px;
   cursor: pointer;
-  transition: all .2s ease;
+  transition: all .1s ease;
+  position: relative;
   &.press {
     transform: scale(.9);
     background: darken(#fff, 12);
   }
   &.special-key {
     background: #b7c4ff;
+  }
+  sup {
+    font-size: 14px;
+    position: absolute;
+    top: 5px;
+    left: 5px;
   }
 }
 .w-578 {
