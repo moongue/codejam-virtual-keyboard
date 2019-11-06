@@ -10,6 +10,7 @@ window.addEventListener('DOMContentLoaded', () => {
     let textarea = document.getElementById('input');
     let stub = false;
     let toggle = false;
+
     // keys
     let keys = document.querySelectorAll('.key');
     keys.forEach(item => {
@@ -22,6 +23,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     textarea.value += item.innerHTML[item.innerHTML.length - 1];
                 }
             } else if (item.classList.contains('special-key')) {
+
                 if (item.textContent === 'Backspace') {
                     textarea.value = textarea.value.slice(0, -1);
 
@@ -30,18 +32,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 } else if (item.textContent === 'CapsLock') {
                     toggle ? toggle = false : toggle = true;
+
                     if (toggle) {
-                        keys.forEach(item => {
-                            if (!item.classList.contains('special-key')) {
-                                item.style.textTransform = 'uppercase';
-                            }
-                        });
+                        upperSymbols();
                     } else {
-                        keys.forEach(item => {
-                            if (!item.classList.contains('special-key')) {
-                                item.style.textTransform = 'inherit';
-                            }
-                        });
+                        returnStandardCase();
                     }
                 } else if (item.textContent === 'Space') {
                     textarea.value += ' ';
@@ -56,6 +51,167 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // language switching
+    runOnKeys(() => {
+        if (localStorage.getItem('language') === 'rus') {
+            localStorage.setItem('language', 'eng');
+            translateWord();
+
+        } else if (localStorage.getItem('language') === 'eng') {
+            localStorage.setItem('language', 'rus');
+            translateWord();
+
+        }
+        changeSymbolUpper();
+    }, "AltLeft", "ShiftLeft");
+
+
+    window.addEventListener('keydown', (e) => {
+        console.log(e.key);
+        keys.forEach(item => {
+            if (item.innerText === e.key || item.innerText === e.code || item.innerHTML[item.innerHTML.length - 1] === e.key) {
+                item.classList.add('press');
+
+                if (!document.querySelector('#input:focus')) {
+                    if (!item.classList.contains('special-key')) {
+                        textarea.value += e.key;
+                    }
+                    if (e.keyCode === 8) {
+                        textarea.value = textarea.value.slice(0, -1);
+                    }
+                }
+            } else if (e.key === 'Control') {
+                if (item.innerText === 'Ctrl') {
+                    item.classList.add('press');
+                }
+            }
+        });
+
+        if (e.keyCode === 32) {
+            textarea.value = textarea.value + ' ';
+        }
+        if (e.keyCode === 13) {
+            textarea.value = textarea.value + '\n';
+        }
+        if (e.keyCode === 16) {
+            upperSymbols();
+
+            if (!stub) {
+                stub = true;
+                changeSymbol();
+            }
+        }
+        if (stub) {
+            keys.forEach(item => {
+                if (!document.querySelector('#input:focus')) {
+                    if (item.querySelector('sup')) {
+                        let sup = item.querySelector('sup');
+                        if (e.key === sup.textContent) {
+                            textarea.value += e.key;
+                        }
+                    }
+                }
+            });
+        }
+        checkCapsLock(e);
+    });
+
+    window.addEventListener('keyup', (e) => {
+        keys.forEach(item => {
+            if (item.innerText === e.key || item.innerText === e.code || item.innerHTML[item.innerHTML.length - 1] === e.key) {
+                item.classList.remove('press');
+
+            } else if (e.key === 'Control') {
+                if (item.innerText === 'Ctrl') {
+                    item.classList.remove('press');
+                }
+            }
+        });
+        if (e.keyCode === 16) {
+            stub = false;
+            changeSymbol();
+            returnStandardCase();
+        }
+    });
+
+    // functions
+    function checkCapsLock(event) {
+        let capsLock = event.getModifierState && event.getModifierState('CapsLock');
+
+        if (capsLock) {
+            upperSymbols();
+        } else {
+            returnStandardCase();
+        }
+    }
+
+    function returnStandardCase() {
+        keys.forEach(item => {
+            if (!item.classList.contains('special-key')) {
+                item.style.textTransform = 'inherit';
+            }
+        })
+    }
+
+    function upperSymbols() {
+        keys.forEach(item => {
+            if (!item.classList.contains('special-key')) {
+                item.style.textTransform = 'uppercase';
+            }
+        });
+    }
+
+    function changeSymbol() {
+        if (localStorage.getItem('language') === 'rus') {
+            const firstSymbol = '\\.';
+            const secondSymbol = '/,';
+
+            keys.forEach(item => {
+                for (let i = 0; i < firstSymbol.length; i++) {
+                    if (item.textContent === firstSymbol[i]) {
+                        item.textContent = secondSymbol[i];
+                    } else if (item.textContent === secondSymbol[i]) {
+                        item.textContent = firstSymbol[i];
+                    }
+                }
+            });
+        } else if (localStorage.getItem('language') === 'eng') {
+            const firstSymbol = '`[]\\;\',./';
+            const secondSymbol = '~{}|:"<>?';
+
+            keys.forEach(item => {
+                for (let i = 0; i < firstSymbol.length; i++) {
+                    if (item.textContent === firstSymbol[i]) {
+                        item.textContent = secondSymbol[i];
+                    } else if (item.textContent === secondSymbol[i]) {
+                        item.textContent = firstSymbol[i];
+                    }
+                }
+            });
+
+        }
+    }
+
+    function changeSymbolUpper() {
+        const firstSymbol = '@#$^&[]\\;\',./';
+        const secondSymbol = '"№;:?[]\\;\',./';
+
+        keys.forEach(item => {
+            if (!item.classList.contains('special-key')) {
+                let sup = item.querySelector('sup');
+
+                if (sup) {
+                    for (let i = 0; i < firstSymbol.length; i++) {
+                        if (sup.textContent === firstSymbol[i]) {
+                            sup.textContent = secondSymbol[i];
+                        } else if (sup.textContent === secondSymbol[i]) {
+                            sup.textContent = firstSymbol[i];
+                        }
+                    }
+                }
+            }
+        });
+    }
 
     function runOnKeys(func, ...codes) {
         let pressed = new Set();
@@ -79,160 +235,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     }
 
-    runOnKeys(() => {
-        if (localStorage.getItem('language') === 'rus') {
-            localStorage.setItem('language', 'eng');
-            translateWord();
-
-        } else if (localStorage.getItem('language') === 'eng') {
-            localStorage.setItem('language', 'rus');
-            translateWord();
-
-        }
-        changeSymbolUpper();
-    }, "AltLeft", "ShiftLeft");
-
-
-    window.addEventListener('keydown', (e) => {
-        console.log(e.key);
-        keys.forEach(item => {
-            if (item.innerText === e.key || item.innerText === e.code || item.innerHTML[item.innerHTML.length - 1] === e.key) {
-                item.classList.add('press');
-                if (!document.querySelector('#input:focus')) {
-                    if (!item.classList.contains('special-key')) {
-                        textarea.value += e.key;
-                    }
-                    if (e.keyCode === 8) {
-                        textarea.value = textarea.value.slice(0, -1);
-                    }
-                }
-            } else if (e.key === 'Control') {
-                if (item.innerText === 'Ctrl') {
-                    item.classList.add('press');
-                }
-            }
-        });
-
-        if (e.keyCode === 32) {
-            textarea.value = textarea.value + ' ';
-        }
-        if (e.keyCode === 13) {
-            textarea.value = textarea.value + '\n';
-        }
-        if (e.keyCode === 16) {
-            keys.forEach(item => {
-                if (!item.classList.contains('special-key')) {
-                    item.style.textTransform = 'uppercase';
-                }
-            });
-            if (!stub) {
-                stub = true;
-                // changeSymbolUpper();
-                changeSymbol();
-            }
-        }
-        if (stub) {
-            keys.forEach(item => {
-                if (!document.querySelector('#input:focus')) {
-                    if (item.querySelector('sup')) {
-                        let sup = item.querySelector('sup');
-                        if (e.key === sup.textContent) {
-                            textarea.value += e.key;
-                        }
-                    }
-                }
-            });
-        }
-    });
-    window.addEventListener('keyup', (e) => {
-        keys.forEach(item => {
-            if (item.innerText === e.key || item.innerText === e.code || item.innerHTML[item.innerHTML.length - 1] === e.key) {
-                item.classList.remove('press');
-            } else if (e.key === 'Control') {
-                if (item.innerText === 'Ctrl') {
-                    item.classList.remove('press');
-                }
-            }
-        });
-        if (e.keyCode === 16) {
-            stub = false;
-            // changeSymbolUpper();
-            changeSymbol();
-            keys.forEach(item => {
-                item.style.textTransform = 'inherit';
-            })
-        }
-    });
-    document.addEventListener('keydown', function (event) {
-        if (event.keyCode === 20) {
-            let capsLock = event.getModifierState && event.getModifierState('CapsLock');
-            if (capsLock) {
-
-                keys.forEach(item => {
-                    if (!item.classList.contains('special-key')) {
-                        item.style.textTransform = 'uppercase';
-                    }
-                })
-            } else {
-                keys.forEach(item => {
-                    if (!item.classList.contains('special-key')) {
-                        item.style.textTransform = 'inherit';
-                    }
-                })
-            }
-        }
-    });
-
-
-    function changeSymbol() {
-        if (localStorage.getItem('language') === 'rus') {
-            const firstSymbol = '\\.';
-            const secondSymbol = '/,';
-            keys.forEach(item => {
-                for (let i = 0; i < firstSymbol.length; i++) {
-                    if (item.textContent === firstSymbol[i]) {
-                        item.textContent = secondSymbol[i];
-                    } else if (item.textContent === secondSymbol[i]) {
-                        item.textContent = firstSymbol[i];
-                    }
-                }
-            });
-        } else if (localStorage.getItem('language') === 'eng') {
-            const firstSymbol = '[]\\;\',./';
-            const secondSymbol = '{}|:"<>?';
-            keys.forEach(item => {
-                for (let i = 0; i < firstSymbol.length; i++) {
-                    if (item.textContent === firstSymbol[i]) {
-                        item.textContent = secondSymbol[i];
-                    } else if (item.textContent === secondSymbol[i]) {
-                        item.textContent = firstSymbol[i];
-                    }
-                }
-            });
-
-        }
-    }
-
-    function changeSymbolUpper() {
-        const firstSymbol = '@#$^&[]\\;\',./';
-        const secondSymbol = '"№;:?[]\\;\',./';
-
-        keys.forEach(item => {
-            if (!item.classList.contains('special-key')) {
-                let sup = item.querySelector('sup');
-                if (sup) {
-                    for (let i = 0; i < firstSymbol.length; i++) {
-                        if (sup.textContent === firstSymbol[i]) {
-                            sup.textContent = secondSymbol[i];
-                        } else if (sup.textContent === secondSymbol[i]) {
-                            sup.textContent = firstSymbol[i];
-                        }
-                    }
-                }
-            }
-        });
-    }
-
     function translateWord() {
         const rusWord = "ёйцукенгшщзхъ\\фывапролджэячсмитьбю.";
         const engWord = "`qwertyuiop[]\\asdfghjkl;'zxcvbnm,./";
@@ -250,12 +252,12 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
         if (localStorage.getItem('language') === 'eng') {
-           keys.forEach(item => {
-             if (item.textContent === 'ю') {
-                 item.textContent = '/'
-             }
-           })
-        } else if(localStorage.getItem('language') === 'rus') {
+            keys.forEach(item => {
+                if (item.textContent === 'ю') {
+                    item.textContent = '/'
+                }
+            })
+        } else if (localStorage.getItem('language') === 'rus') {
             keys.forEach(item => {
                 if (item.textContent === '/') {
                     item.textContent = '.'
