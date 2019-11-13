@@ -1,0 +1,21 @@
+//Utils
+@import "utils/reset";
+@import "utils/vars";
+
+body {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  color: $font;
+  height: 100vh;
+}
+.wrapper {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 10px 30px;
+}
+.row {
+  margin-top: 7px;
+  display: flex;
+}
+//Modules
+@import "modules/keyboard";
